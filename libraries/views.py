@@ -71,5 +71,18 @@ def DeleteAccounts(request, pk):
     accountsData.save()
     response_data = {"status": "Accounts Deleted Successfully"}
     return Response(response_data, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+def UpdateAccounts(request, pk):
+    accountsData = get_object_or_404(Accounts, pk=pk)
+
+    serializer = AccountsSerializer(accountsData, data=request.data)
     
+    if serializer.is_valid():
+        serializer.save()
+        response_data = {"data": serializer.data, "status": "Accounts Updated Successfully"}
+        return Response(response_data, status=status.HTTP_201_CREATED)
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
