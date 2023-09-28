@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from libraries.models import AccountsResource, Accounts
 from libraries.serializers import AccountsSerializer
@@ -9,14 +9,17 @@ import pandas as pd
 from tablib import Dataset
 
 # Create your views here.
-
-
 @api_view(['GET'])
 def FetchAccounts(request):
     response = Accounts.objects.all()
     serializer = AccountsSerializer(response, many=True)
     return JsonResponse(serializer.data, safe=False)
 
+@api_view(['GET'])
+def FetchAccount(request, pk):
+    response = Accounts.objects.get(pk=pk)
+    serializer = AccountsSerializer(response, many=False)
+    return JsonResponse(serializer.data, safe=False)
 
 class ImportAccountsData(generics.GenericAPIView):
     parser_classes = [parsers.MultiPartParser]
@@ -56,7 +59,30 @@ def CreateAccounts(request):
     
     if serializer.is_valid():
         serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        response_data = {"data": serializer.data, "status": "Accounts Created Successfully"}
+        return Response(response_data, status=status.HTTP_201_CREATED)
     
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+def DeleteAccounts(request, pk):
+    accountsData = get_object_or_404(Accounts, pk=pk)
+    accountsData.deleted = True
+    accountsData.save()
+    response_data = {"status": "Accounts Deleted Successfully"}
+    return Response(response_data, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+def UpdateAccounts(request, pk):
+    accountsData = get_object_or_404(Accounts, pk=pk)
+
+    serializer = AccountsSerializer(accountsData, data=request.data)
+    
+    if serializer.is_valid():
+        serializer.save()
+        response_data = {"data": serializer.data, "status": "Accounts Updated Successfully"}
+        return Response(response_data, status=status.HTTP_201_CREATED)
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
