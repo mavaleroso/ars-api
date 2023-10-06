@@ -9,6 +9,7 @@ class DisbursementJournalSerializer(serializers.ModelSerializer):
 
 
 class CDJSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = CDJ
         fields = '__all__'

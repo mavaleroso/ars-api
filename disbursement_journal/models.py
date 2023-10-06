@@ -37,7 +37,8 @@ class DisbursementJournal(models.Model):
     source = models.CharField(max_length=100, null=True, blank=True)
     payee = models.TextField(max_length=100, null=True, blank=True)
     nature_of_payment = models.TextField(max_length=100, null=True, blank=True)
-    check_tmp = models.DecimalField(max_digits=8, decimal_places=2)
+    check_tmp = models.DecimalField(
+        max_digits=8, decimal_places=2, null=True, blank=True)
     cash = models.DecimalField(
         max_digits=8, decimal_places=2, null=True, blank=True)
     tax = models.DecimalField(

@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from disbursement_journal.models import DisbursementJournalResource, DisbursementJournal, CDJ
 from disbursement_journal.serializers import DisbursementJournalSerializer, CDJSerializer
@@ -9,6 +9,28 @@ import pandas as pd
 from tablib import Dataset
 
 # Create your views here.
+
+
+@api_view(['GET'])
+def FetchCDJ(request):
+    response = CDJ.objects.all().order_by('-id')
+    serializer = CDJSerializer(response, many=True)
+    return JsonResponse(serializer.data, safe=False)
+
+
+def Fetch(request, pk):
+    cdj_response = CDJ.objects.get(pk=pk)
+    cdj_serializer = CDJSerializer(cdj_response, many=False)
+
+    dj_response = DisbursementJournal.objects.filter(cdj=pk)
+    dj_serializer = DisbursementJournalSerializer(dj_response, many=True)
+
+    data = {
+        'cdj': cdj_serializer.data,
+        'disbursement_journal': dj_serializer.data
+    }
+
+    return JsonResponse(data, safe=False)
 
 
 class ImportDisbursementJournalData(generics.GenericAPIView):
@@ -105,3 +127,11 @@ class ImportDisbursementJournalData(generics.GenericAPIView):
             return Response({"status": "Disbursement Journal Data Imported Successfully"})
 
         return Response({"status": "Failed to import Disbursement Journal Data! Please contact your the developer"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+def DeleteCDJ(request, pk):
+    CDJData = get_object_or_404(CDJ, pk=pk)
+    CDJData.delete()
+    response_data = {"status": "CDJ Deleted Successfully"}
+    return Response(response_data, status=status.HTTP_200_OK)
