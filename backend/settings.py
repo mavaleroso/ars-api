@@ -51,7 +51,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'import_export',
     'main',
-    'libraries'
+    'libraries',
+    'disbursement_journal'
 ]
 
 MIDDLEWARE = [

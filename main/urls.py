@@ -18,10 +18,10 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    # path('auth/login/', CustomAuthToken.as_view()),
     path('auth/check/', CheckSessionExist),
     path("auth/", include("dj_rest_auth.urls")),
     path("libraries/", include("libraries.urls")),
+    path("disbursement_journal/", include("disbursement_journal.urls")),
     re_path(
         r"^swagger(?P<format>\.json|\.yaml)$",
         schema_view.without_ui(cache_timeout=0),

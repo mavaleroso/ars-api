@@ -9,17 +9,21 @@ import pandas as pd
 from tablib import Dataset
 
 # Create your views here.
+
+
 @api_view(['GET'])
 def FetchAccounts(request):
     response = Accounts.objects.all()
     serializer = AccountsSerializer(response, many=True)
     return JsonResponse(serializer.data, safe=False)
 
+
 @api_view(['GET'])
 def FetchAccount(request, pk):
     response = Accounts.objects.get(pk=pk)
     serializer = AccountsSerializer(response, many=False)
     return JsonResponse(serializer.data, safe=False)
+
 
 class ImportAccountsData(generics.GenericAPIView):
     parser_classes = [parsers.MultiPartParser]
@@ -53,16 +57,19 @@ class ImportAccountsData(generics.GenericAPIView):
 
         return Response({"status": "Not Imported Accounts Data"}, status=status.HTTP_400_BAD_REQUEST)
 
+
 @api_view(['POST'])
 def CreateAccounts(request):
     serializer = AccountsSerializer(data=request.data)
-    
+
     if serializer.is_valid():
         serializer.save()
-        response_data = {"data": serializer.data, "status": "Accounts Created Successfully"}
+        response_data = {"data": serializer.data,
+                         "status": "Accounts Created Successfully"}
         return Response(response_data, status=status.HTTP_201_CREATED)
-    
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['POST'])
 def DeleteAccounts(request, pk):
@@ -72,17 +79,17 @@ def DeleteAccounts(request, pk):
     response_data = {"status": "Accounts Deleted Successfully"}
     return Response(response_data, status=status.HTTP_200_OK)
 
+
 @api_view(['POST'])
 def UpdateAccounts(request, pk):
     accountsData = get_object_or_404(Accounts, pk=pk)
 
     serializer = AccountsSerializer(accountsData, data=request.data)
-    
+
     if serializer.is_valid():
         serializer.save()
-        response_data = {"data": serializer.data, "status": "Accounts Updated Successfully"}
+        response_data = {"data": serializer.data,
+                         "status": "Accounts Updated Successfully"}
         return Response(response_data, status=status.HTTP_201_CREATED)
-    
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-

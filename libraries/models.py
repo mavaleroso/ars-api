@@ -2,12 +2,14 @@ from django.db import models
 from import_export import resources
 # Create your models here.
 
+
 class SoftDeletionManager(models.Manager):
     def __init__(self, *args, **kwargs):
         super(SoftDeletionManager, self).__init__(*args, **kwargs)
 
     def get_queryset(self):
         return super(SoftDeletionManager, self).get_queryset().filter(deleted=False)
+
 
 class Accounts(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -28,12 +30,13 @@ class Accounts(models.Model):
     objects = SoftDeletionManager()
 
     def delete(self, *args, **kwargs):
-        self.deleted_at = True
+        self.deleted = True
         self.save()
 
     def undelete(self):
-        self.deleted_at = False
+        self.deleted = False
         self.save()
+
     class Meta:
         managed = True
         db_table = 'lib_accounts'
