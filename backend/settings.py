@@ -52,7 +52,8 @@ INSTALLED_APPS = [
     'import_export',
     'main',
     'libraries',
-    'disbursement_journal'
+    'disbursement_journal',
+    'receipts_journal',
 ]
 
 MIDDLEWARE = [

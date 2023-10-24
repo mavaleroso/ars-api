@@ -1,8 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
-from import_export import resources, fields, widgets
+from import_export import resources, widgets
 from import_export.fields import Field
-from import_export.widgets import ManyToManyWidget
 # Create your models here.
 
 
