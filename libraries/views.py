@@ -33,7 +33,7 @@ class ImportAccountsData(generics.GenericAPIView):
         file = request.FILES['attachment']
         df = pd.read_excel(file)
 
-        """Rename the headeers in the excel file
+        """Rename the headers in the excel file
            to match Django models fields"""
 
         rename_columns = {"UACS Object Code": "uacs_object_code", "Account Title": "account_title",

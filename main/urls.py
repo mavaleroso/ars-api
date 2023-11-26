@@ -23,6 +23,7 @@ urlpatterns = [
     path("libraries/", include("libraries.urls")),
     path("disbursement_journal/", include("disbursement_journal.urls")),
     path("receipts_journal/", include("receipts_journal.urls")),
+    path("general_journal/", include("general_journal.urls")),
     re_path(
         r"^swagger(?P<format>\.json|\.yaml)$",
         schema_view.without_ui(cache_timeout=0),
