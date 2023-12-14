@@ -1,5 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
+from django.db.models import Sum,  DecimalField, IntegerField, F, ExpressionWrapper
+from django.db.models.functions import Coalesce
 from general_journal.models import GeneralJournalResource, GeneralJournal, Journal
 from general_journal.serializers import GeneralJournalSerializer, JournalSerializer
 from rest_framework.decorators import api_view
@@ -27,29 +29,31 @@ class ImportGeneralJournalData(generics.GenericAPIView):
         journal_query.save()
 
         file = request.FILES['attachment']
-        df = pd.read_excel(file, keep_default_na=False, skiprows=3)
+        df = pd.read_excel(file, keep_default_na=False, skiprows=2)
 
         rename_columns = {
-            df.columns[0]: 'rcd',
+            df.columns[0]: 'date',
             df.columns[1]: 'jev_no',
-            df.columns[2]: 'name_of_collecting_officer',
-            df.columns[3]: 'col_debit_amount',
-            df.columns[4]: 'col_debit_uacs_object_code',
-            df.columns[5]: 'col_credit_or_no',
-            df.columns[6]: 'col_credit_transaction',
-            df.columns[7]: 'col_credit_payor',
-            df.columns[8]: 'col_credit_uacs_name',
-            df.columns[9]: 'col_credit_sundry_uacs_object_code',
-            df.columns[10]: 'col_credit_sundry_p',
-            df.columns[11]: 'col_credit_sundry_amount',
-            df.columns[12]: 'dep_debit_deposited_account',
-            df.columns[13]: 'dep_date_of_deposit',
-            df.columns[14]: 'dep_debit_sundry_uacs_object_code',
-            df.columns[15]: 'dep_debit_sundry_p',
-            df.columns[16]: 'dep_debit_sundry_amount',
-            df.columns[17]: 'dep_credit_uacs_object_code',
-            df.columns[18]: 'dep_credit_amount'
+            df.columns[2]: 'particulars',
+            df.columns[3]: 'uacs_object_code',
+            df.columns[4]: 'p',
+            df.columns[5]: 'amount_debit',
+            df.columns[6]: 'amount_credit'
         }
+
+        df = df[df[df.columns[4]] != '']
+
+        df.loc[df[df.columns[4]] !=
+               '', df.columns[4]] = 1
+
+        df.iloc[:, 5] = pd.to_numeric(
+            df.iloc[:, 5], errors='coerce')
+
+        df.iloc[:, 6] = pd.to_numeric(
+            df.iloc[:, 6], errors='coerce')
+
+        df.iloc[:, 5] = df.iloc[:, 5].fillna('')
+        df.iloc[:, 6] = df.iloc[:, 6].fillna('')
 
         df['journal_id'] = journal_query.id
 
@@ -71,3 +75,63 @@ class ImportGeneralJournalData(generics.GenericAPIView):
             return Response({"status": "General Journal Data Imported Successfully"})
 
         return Response({"status": "Failed to import General Journal Data! Please contact your the developer"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def FetchGJ(request):
+    # response = Journal.objects.all().order_by('-id')
+    response = Journal.objects.annotate(
+        debit=ExpressionWrapper(
+            Sum('generaljournal__amount_debit', output_field=DecimalField()),
+            output_field=DecimalField()
+        ),
+        credit=ExpressionWrapper(
+            Sum('generaljournal__amount_credit', output_field=DecimalField()),
+            output_field=DecimalField()
+        ),
+    ).values('id', 'sheet_no', 'month', 'year', 'remarks', 'created_at', 'updated_at', 'debit', 'credit').order_by('id')
+    serializer = JournalSerializer(response, many=True)
+    return JsonResponse(serializer.data, safe=False)
+
+
+@api_view(['POST'])
+def DeleteGJ(request, pk):
+    JournalData = get_object_or_404(Journal, pk=pk)
+    JournalData.delete()
+    response_data = {"status": "General Journal Deleted Successfully"}
+    return Response(response_data, status=status.HTTP_200_OK)
+
+
+def Fetch(request, pk):
+    journal_response = Journal.objects.get(pk=pk)
+    journal_serializer = JournalSerializer(journal_response, many=False)
+
+    gj_response = GeneralJournal.objects.filter(journal=pk)
+    gj_serializer = GeneralJournalSerializer(gj_response, many=True)
+
+    data = {
+        'journal': journal_serializer.data,
+        'receipts_journal': gj_serializer.data
+    }
+
+    return JsonResponse(data, safe=False)
+
+
+@api_view(['POST'])
+def UpdateJournal(request, pk):
+    sheet_no = request.POST.get('sheet_no')
+    month = request.POST.get('month')
+    year = request.POST.get('year')
+    remarks = request.POST.get('remarks')
+    user_id = request.user.id
+
+    journal_data = Journal.objects.get(pk=pk)
+    journal_data.sheet_no = sheet_no
+    journal_data.month = month
+    journal_data.year = year
+    journal_data.remarks = remarks
+    journal_data.author_id = user_id
+    journal_data.save()
+
+    response_data = {"status": "Journal Updated Successfully"}
+    return Response(response_data, status=status.HTTP_200_OK)

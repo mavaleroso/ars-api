@@ -28,11 +28,11 @@ class GeneralJournal(models.Model):
     jev_no = models.CharField(max_length=100, null=True, blank=True)
     particulars = models.TextField(max_length=100, null=True, blank=True)
     uacs_object_code = models.CharField(max_length=100, null=True, blank=True)
-    p = models.CharField(max_length=100, null=True, blank=True)
+    p = models.BooleanField(default=False)
     amount_debit = models.DecimalField(
-        max_digits=8, decimal_places=2, null=True, blank=True)
+        max_digits=15, decimal_places=2, null=True, blank=True)
     amount_credit = models.DecimalField(
-        max_digits=8, decimal_places=2, null=True, blank=True)
+        max_digits=15, decimal_places=2, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
@@ -50,6 +50,4 @@ class GeneralJournalResource(resources.ModelResource):
 
     class Meta:
         model = GeneralJournal
-        skip_unchanged = True
         report_skipped = True
-        import_id_fields = ['recon_no', 'check_no']
